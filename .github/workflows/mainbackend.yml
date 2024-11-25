@@ -1,0 +1,31 @@
+name: build and deploy backend
+
+on: 
+  push:
+    branches:
+      - main  
+
+jobs:
+  frontend-deploy:
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Repository Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+        working-directory: ./server
+
+      - name: Deploy to Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.MY_RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.MY_RENDER_API_KEY }}
+          wait-for-success: true
