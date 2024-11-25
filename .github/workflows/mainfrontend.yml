@@ -1,0 +1,33 @@
+name: build and deploy frontend
+
+on: 
+  push:
+    branches:
+      - main  
+
+jobs:
+  frontend-deploy:
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Repository Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: ./client
+
+      - name: Build Frontend
+        working-directory: ./client
+        run: npm run build
+
+      - name: Deploy to Netlify
+        run: |
+          npm install -g netlify-cli
+          netlify deploy --prod --dir=client/build --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} --site ${{ secrets.NETLIFY_SITE_ID }}  # Deploy to Netlify
