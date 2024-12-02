@@ -28,7 +28,6 @@ export const authenticateUser = async (credential: string) => {
         return { status: 200, message: 'User authenticated successfully', user };
 
     } catch (error: any) {
-        console.log(error.message)
         return { status: 500, message: 'Something went wrong' };
     }
 };

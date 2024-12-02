@@ -5,29 +5,35 @@ import { authenticateUser } from './authenticateUser';
 
 export const getMyReactionsService = async (credential: string) => {
 
-    const userAuthResult = await authenticateUser(credential);
+    try{
 
-    if (userAuthResult.status !== 200) {
-        return userAuthResult;
-    }
-
-    const { user } = userAuthResult;
-
-    if (!user?.id) {
-        return { status: 400, message: 'Invalid User' };
-    }
-
-    const likedPosts = await prisma.reaction.findMany({
-        where: {
-            userId: user.id
+        const userAuthResult = await authenticateUser(credential);
+        
+        if (userAuthResult.status !== 200) {
+            return userAuthResult;
         }
-    });
+        
+        const { user } = userAuthResult;
+        
+        if (!user?.id) {
+            return { status: 400, message: 'Invalid User' };
+        }
+        
+        const likedPosts = await prisma.reaction.findMany({
+            where: {
+                userId: user.id
+            }
+        });
+        
+        
+        const posts = likedPosts.map(reaction => ({
+            postId: reaction.postId,
+            reaction: reaction.type,
+        }));
+        
+        return { status: 200, message: 'posts with reactions retrieved successfully', posts };
+    }catch(error){
+        return { status: 500, message: 'some error occured' };
 
-
-    const posts = likedPosts.map(reaction => ({
-        postId: reaction.postId,
-        reaction: reaction.type,
-    }));
-
-    return { status: 200, message: 'posts with reactions retrieved successfully', posts };
+    }
 };
