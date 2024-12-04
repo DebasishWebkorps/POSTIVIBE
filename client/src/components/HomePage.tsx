@@ -1,9 +1,16 @@
 import axios from "axios"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { socket } from "../socket"
 
 function CardElement(props) {
     const { data } = props
+
+    const reactionHandler = (id) => {
+        socket.emit('onReaction', id)
+    }
+
+
     return (
         <div className="w-10/12 bg-red-200 mx-auto my-4 p-3 rounded-md relative shadow-md hover:translate-x-6 hover:h-36">
 
@@ -13,7 +20,9 @@ function CardElement(props) {
 
             <p>{data.content}</p>
 
-            <div className="absolute bottom-0 right-0 text-xs rounded-md p-2 cursor-pointer shadow-md bg-white active:scale-90">
+            <div
+                onClick={() => reactionHandler(data.id)}
+                className="absolute bottom-0 right-0 text-xs rounded-md p-2 cursor-pointer shadow-md bg-white active:scale-90">
                 Like <span className="font-semibold">{data.likes}</span>
             </div>
         </div>
@@ -25,7 +34,6 @@ function CardElement(props) {
 function HomePage() {
 
     const [posts, setPosts] = useState(null)
-    const [userDetail, setUserDetail] = useState(null)
 
     const navigate = useNavigate()
 
