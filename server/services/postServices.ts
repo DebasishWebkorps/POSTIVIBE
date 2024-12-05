@@ -21,7 +21,7 @@ export const createPostService = async (credential: string, title: string, conte
             return { status: 400, message: 'You are not authorized' };
         }
 
-        await prisma.post.create({
+        const post = await prisma.post.create({
             data: {
                 title,
                 content,
@@ -29,7 +29,9 @@ export const createPostService = async (credential: string, title: string, conte
             },
         });
 
-        return { status: 200, message: 'Post Created' };
+        const { userId, ...filteredPost } = post
+
+        return { status: 200, message: 'Post Created', filteredPost };
 
     } catch (error: any) {
         return { status: 500, message: 'Something went wrong while creating the post' };
@@ -101,7 +103,8 @@ export const postReactionService = async (credential: string, postid: number, re
         });
 
 
-        return { status: 200, message: 'Post Reacted Successfully' };
+        return { status: 200, message: 'Post Reacted Successfully', email: user.email };
+
 
     } catch (error: any) {
         return { status: 500, message: 'Something went wrong while reacting to the post' };
@@ -112,7 +115,7 @@ export const getAllPostsService = async (credential: string) => {
 
     try {
 
-        await authenticateUser(credential);
+        const { user } = await authenticateUser(credential);
 
         const allPosts = await prisma.post.findMany({
             include: {
@@ -121,15 +124,29 @@ export const getAllPostsService = async (credential: string) => {
                         reactedBy: true
                     },
                 },
+                reactedBy: {
+                    where: {
+                        userId: user.id
+                    },
+                    select: {
+                        type: true
+                    }
+                }
             },
         });
 
-        const posts = allPosts.map(post => ({
-            // id: post.id,
-            // title: post.title,
-            ...post,
-            likedBy: post._count.reactedBy,
-        }));
+        const posts = allPosts.map(post => {
+            const userReaction = post.reactedBy.length > 0 ? post.reactedBy[0].type : null;
+
+            return {
+                id: post.id,
+                title: post.title,
+                content: post.content,
+                likes: post.likes,
+                userReaction,
+                reactionCount: post._count.reactedBy,
+            };
+        });
 
         return { status: 200, message: 'All Posts', posts };
     } catch (error: any) {

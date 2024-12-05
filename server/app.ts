@@ -13,7 +13,7 @@ dotenv.config()
 const app = express()
 
 const httpServer = createServer(app)
-const io = new Server(httpServer, {
+export const io = new Server(httpServer, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"],
@@ -47,6 +47,7 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('A client disconnected')
     })
+
 })
 
 httpServer.listen(`${process.env.PORT}`, () => {
