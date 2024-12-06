@@ -5,7 +5,7 @@ import { authenticateUser } from '../services/authenticateUser';
 
 export const getMyReactions = async (req: Request, res: Response) => {
     try {
-        const { credential } = req.body;
+        const credential = req.headers.authorization?.split(' ')[1];
         const result = await getMyReactionsService(credential);
         res.status(result.status).json(result);
         return

@@ -1,22 +1,20 @@
 import { GoogleLogin } from "@react-oauth/google";
-import axios from 'axios'
 import { useNavigate } from "react-router-dom";
+import { postLoginSuccessHandler } from "../services/apiServices";
 
-function LoginComponent() {   
+function LoginComponent() {
 
     const navigate = useNavigate()
 
     const successHandler = async (result) => {
 
-        try{
-            const response = await axios.post(`${process.env.REACT_APP_server_url}/auth/login`, {
-                credential: result.credential
-            })
-            
+        try {
+            const response = await postLoginSuccessHandler(result.credential)
+
             localStorage.setItem('postivibecred', result.credential)
             alert(response.data.message)
             navigate('/')
-        }catch(error){
+        } catch (error) {
             console.log(error.message)
         }
 

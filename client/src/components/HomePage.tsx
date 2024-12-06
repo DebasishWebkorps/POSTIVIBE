@@ -1,27 +1,33 @@
 import axios from "axios"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { RootState } from "../redux/store/store"
 import { useDispatch } from "react-redux"
 import { setPosts } from "../redux/slice/postSlice"
+import { BiLike, BiDislike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
+import { addPost, getPost, postReaction } from "../services/apiServices"
 
 function CardElement(props) {
     const { data } = props
+    const [isReacting, setIsReacting] = useState(false)
+
 
     const reactionHandler = async (id, reaction) => {
 
         const data = {
-            credential: localStorage.getItem('postivibecred'),
             postid: id,
             reaction
         }
 
         try {
-            const response = await axios.post(`${process.env.REACT_APP_server_url}/posts/reaction`, data);
-            props.postReactionHandler(id)
+            setIsReacting(true)
+            await postReaction(data)
+            // props.postReactionHandler(id)
         } catch (error) {
             console.error(error.message)
+        } finally {
+            setIsReacting(false)
         }
 
 
@@ -29,7 +35,7 @@ function CardElement(props) {
 
 
     return (
-        <div className="my-4 pt-3 relative mx-auto w-10/12 rounded-md shadow-md bg-gradient-to-r from-blue-600 to-violet-600 text-white hover:scale-x-105">
+        <div className="my-4 pt-3 relative mx-auto w-10/12 rounded-md shadow-md bg-gradient-to-r from-blue-600 to-violet-600 text-white">
 
             <div className="flex justify-center">
                 <p className="underline">{data.title}</p>
@@ -39,20 +45,30 @@ function CardElement(props) {
 
 
             <div
-                className="w-20 text-nowrap flex items-center justify-between absolute right-0 bottom-0 mt-2 text-xs rounded-md p-2  cursor-pointer shadow-md bg-gradient-to-r from-yellow-400 to-orange-500 active:scale-90">
+                className="w-20 text-nowrap flex items-center justify-center gap-2 absolute right-0 bottom-0 mt-2 text-xs rounded-md p-2  cursor-pointer shadow-md bg-gradient-to-r from-yellow-400 to-orange-500 active:scale-90">
 
-                {data.userReaction === 'like' && <span>Liked</span>}
-                {data.userReaction === 'dislike' && <span>Disliked</span>}
+                {data.userReaction === 'like' && <span>
+                    <BiSolidLike size={20} />
+                </span>}
+                {data.userReaction === 'dislike' && <span>
+                    <BiSolidDislike size={20} />
+                </span>}
                 {!data.userReaction &&
                     <div className="flex flex-col gap-1">
                         <button
                             onClick={() => reactionHandler(data.id, 'like')}
-                            className="shadow-md">Like</button>
+                            disabled={isReacting}
+                            className="shadow-md hover:scale-110">
+                            <BiLike size={20} />
+                        </button>
                         {
                             data.likes >= 1 &&
                             <button
                                 onClick={() => reactionHandler(data.id, 'dislike')}
-                                className="shadow-md">Dislike</button>
+                                disabled={isReacting}
+                                className="shadow-md hover:scale-110">
+                                <BiDislike size={20} />
+                            </button>
                         }
                     </div>
                 }
@@ -68,6 +84,8 @@ function CardElement(props) {
 
 function AddPostForm() {
 
+    const [isSubmiting, setIsSubmitting] = useState(false)
+
     const titleRef = useRef<HTMLInputElement | null>()
     const contentRef = useRef<HTMLTextAreaElement | null>()
 
@@ -75,22 +93,15 @@ function AddPostForm() {
         event.preventDefault()
 
         try {
-
+            setIsSubmitting(true)
             if (titleRef.current && contentRef.current) {
 
                 const post = {
                     title: titleRef.current.value,
                     content: contentRef.current.value,
-                    credential: localStorage.getItem('postivibecred')
                 }
 
-                const response = await axios.post(`${process.env.REACT_APP_server_url}/posts/add`, post);
-
-
-                // const addedPost = response.data.result.filteredPost
-                // addedPost.reaction = null
-                // console.log(addedPost)
-
+                await addPost(post)
 
                 titleRef.current.value = ''
                 contentRef.current.value = ''
@@ -99,6 +110,11 @@ function AddPostForm() {
 
         } catch (error) {
             console.error(error.message)
+        } finally {
+            setTimeout(() => {
+
+                setIsSubmitting(false)
+            }, 1000)
         }
 
     }
@@ -119,9 +135,10 @@ function AddPostForm() {
                 <button
                     onClick={(event) => addPostHandler(event)}
                     type="submit"
+                    disabled={isSubmiting}
                     className="bg-gradient-to-r from-yellow-500 to-orange-400 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gradient-to-l hover:from-yellow-400 hover:to-orange-500 transition-all duration-300 ease-in-out shadow-lg"
                 >
-                    Add Post
+                    {isSubmiting ? 'Adding Post...' : 'Add Post'}
                 </button>
             </form>
         </div>
@@ -133,10 +150,8 @@ function HomePage() {
 
     const currentUser = useSelector((state: RootState) => state.user.currentUser)
 
-    const credential = localStorage.getItem('postivibecred')
     const dispatch = useDispatch()
 
-    // const [posts, setPosts] = useState(null)
     const posts = useSelector((state: RootState) => state.posts.posts)
 
     const navigate = useNavigate()
@@ -144,12 +159,7 @@ function HomePage() {
     const fetchAllPosts = async () => {
 
         try {
-            const response = await axios.get(`${process.env.REACT_APP_server_url}/posts`, {
-                headers: {
-                    Authorization: `Bearer ${credential}`,
-                }
-            });
-            // setPosts(response.data.posts)
+            const response = await getPost()
             dispatch(setPosts(response.data.posts))
         } catch (error) {
             console.error(error.message)
@@ -157,33 +167,13 @@ function HomePage() {
 
     }
 
-
-    const postReactionHandler = (id) => {
-
-        const updatedPosts = posts.map(post => {
-            if (post.id === id) {
-                return {
-                    ...post,
-                    likes: post.likes + 1
-                }
-            } else {
-                return post
-            }
-        })
-
-        const sortedPosts = updatedPosts.sort((a, b) => b.likes - a.likes)
-
-        // setPosts(sortedPosts)
-        // dispatch(setPosts(sortedPosts))
-    }
-
-
     useEffect(() => {
         fetchAllPosts()
     }, [])
 
 
     const logoutHandler = () => {
+        localStorage.removeItem('postivibecred')
         navigate('/login')
     }
 
@@ -206,7 +196,7 @@ function HomePage() {
 
             <div className="flex-1">
                 {posts?.map(post => {
-                    return <CardElement key={post.id} data={post} postReactionHandler={postReactionHandler} />
+                    return <CardElement key={post.id} data={post} />
                 })}
 
             </div>

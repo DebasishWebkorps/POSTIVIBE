@@ -5,7 +5,9 @@ import { io } from '../app';
 
 export const postAddPost = async (req: Request, res: Response) => {
     try {
-        const { credential, title, content } = req.body;
+        const { title, content } = req.body;
+        const credential = req.headers.authorization?.split(' ')[1];
+
         const result = await createPostService(credential, title, content);
 
         io.emit('post added', result)
@@ -20,9 +22,9 @@ export const postAddPost = async (req: Request, res: Response) => {
 
 export const postReaction = async (req: Request, res: Response) => {
     try {
-        const { credential, postid, reaction } = req.body;
+        const { postid, reaction } = req.body;
+        const credential = req.headers.authorization?.split(' ')[1];
         const result = await postReactionService(credential, postid, reaction);
-        res.status(result.status).json({ message: result.message });
 
         io.emit('post Reaction', {
             id: postid,

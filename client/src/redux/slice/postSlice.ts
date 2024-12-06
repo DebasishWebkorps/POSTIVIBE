@@ -26,30 +26,38 @@ const postSlice = createSlice({
         setPosts(state, action: PayloadAction<Post[]>) {
             state.posts = action.payload;
         },
-        reactToPost(state, action: PayloadAction<{ id: number; reaction: string, result: object }>) {
+        reactToPost(state, action: PayloadAction<{ id: number; reaction: string; result: object }>) {
             const { id, reaction } = action.payload;
-            const post = state.posts.find(post => post.id === id);
+            const postIndex = state.posts.findIndex(post => post.id === id);
 
-            if (post) {
+            if (postIndex !== -1) {
+                const updatedPost = { ...state.posts[postIndex] };
+
                 if (reaction === "like") {
-                    post.likes += 1;
+                    updatedPost.likes += 1;
                 } else if (reaction === "dislike") {
-                    post.likes -= 1;
+                    updatedPost.likes -= 1;
                 }
+
+                state.posts[postIndex] = updatedPost;
             }
 
-            state.posts = state.posts.sort((a, b) => b.likes - a.likes);
+            state.posts = [...state.posts].sort((a, b) => b.likes - a.likes);
         },
         addOwnReaction(state, action: PayloadAction<{ id: number; reaction: string, result: object }>) {
             const { id, reaction } = action.payload;
-            const post = state.posts.find(post => post.id === id);
+            const postIndex = state.posts.findIndex(post => post.id === id);
 
-            if (post) {
+            if (postIndex !== -1) {
+                const updatedPost = { ...state.posts[postIndex] };
+
                 if (reaction === "like") {
-                    post.userReaction = 'like';
+                    updatedPost.userReaction = 'like';
                 } else if (reaction === "dislike") {
-                    post.userReaction = 'dislike';
+                    updatedPost.userReaction = 'dislike';
                 }
+
+                state.posts[postIndex] = updatedPost;
             }
 
         }

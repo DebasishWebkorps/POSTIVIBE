@@ -118,6 +118,9 @@ export const getAllPostsService = async (credential: string) => {
         const { user } = await authenticateUser(credential);
 
         const allPosts = await prisma.post.findMany({
+            orderBy: {
+                likes: 'desc'
+            },
             include: {
                 _count: {
                     select: {
