@@ -10,10 +10,14 @@ interface Post {
 
 interface PostState {
     posts: Post[];
+    from: number,
+    to: number
 }
 
 const initialState: PostState = {
     posts: [],
+    from: null,
+    to: null
 };
 
 const postSlice = createSlice({
@@ -42,7 +46,14 @@ const postSlice = createSlice({
                 state.posts[postIndex] = updatedPost;
             }
 
+
             state.posts = [...state.posts].sort((a, b) => b.likes - a.likes);
+            
+            const updatedIndex = state.posts.findIndex(post => post.id === id)
+
+            state.from = postIndex
+            state.to = updatedIndex
+
         },
         addOwnReaction(state, action: PayloadAction<{ id: number; reaction: string, result: object }>) {
             const { id, reaction } = action.payload;

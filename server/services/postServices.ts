@@ -39,9 +39,7 @@ export const createPostService = async (credential: string, title: string, conte
 };
 
 export const postReactionService = async (credential: string, postid: number, reaction: string) => {
-
     try {
-
         const userAuthResult = await authenticateUser(credential);
 
         if (userAuthResult.status !== 200) {
@@ -58,10 +56,10 @@ export const postReactionService = async (credential: string, postid: number, re
             where: {
                 id: postid
             }
-        })
+        });
 
         if (!existingPost) {
-            return { status: 404, message: 'Post Unavailable or Removed' }
+            return { status: 404, message: 'Post Unavailable or Removed' };
         }
 
         const existingReaction = await prisma.reaction.findUnique({
@@ -73,43 +71,71 @@ export const postReactionService = async (credential: string, postid: number, re
             },
         });
 
-        if (existingReaction) {
-            return { status: 400, message: 'You have already reacted to this post' };
-        }
+        const result = await prisma.$transaction(async (prisma) => {
+            if (existingReaction) {
 
-        if (reaction === 'dislike' && existingPost.likes < 1) {
-            return { status: 400, message: 'You cannot dislike this post ' }
-        }
+                if (existingReaction.type === reaction) {
+                    return { status: 400, message: 'You have already reacted with this reaction' };
+                }
 
-        await prisma.$transaction(async (prisma) => {
+                await prisma.reaction.update({
+                    where: {
+                        userId_postId: {
+                            userId: user.id,
+                            postId: existingPost.id,
+                        },
+                    },
+                    data: {
+                        type: reaction,
+                    },
+                });
 
-            await prisma.reaction.create({
-                data: {
-                    userId: user.id,
-                    postId: existingPost.id,
-                    type: reaction,
-                },
-            });
+                await prisma.post.update({
+                    where: {
+                        id: existingPost.id,
+                    },
+                    data: {
+                        likes: reaction === 'like'
+                            ? existingPost.likes + 1
+                            : existingPost.likes - 1,
+                    },
+                });
+            } else {
 
-            await prisma.post.update({
-                where: {
-                    id: existingPost.id,
-                },
-                data: {
-                    likes: reaction === 'like' ? (existingPost.likes + 1) : (existingPost.likes - 1),
-                },
-            });
+                if (reaction === 'dislike' && existingPost.likes < 1) {
+                    return { status: 400, message: 'You cannot dislike this post as there are no likes yet.' };
+                }
 
+                await prisma.reaction.create({
+                    data: {
+                        userId: user.id,
+                        postId: existingPost.id,
+                        type: reaction,
+                    },
+                });
+
+                await prisma.post.update({
+                    where: {
+                        id: existingPost.id,
+                    },
+                    data: {
+                        likes: reaction === 'like'
+                            ? existingPost.likes + 1
+                            : existingPost.likes - 1,
+                    },
+                });
+            }
+
+            return { status: 200, message: 'Post Reacted Successfully', email: user.email };
         });
 
-
-        return { status: 200, message: 'Post Reacted Successfully', email: user.email };
-
+        return result;
 
     } catch (error: any) {
         return { status: 500, message: 'Something went wrong while reacting to the post' };
     }
 };
+
 
 export const getAllPostsService = async (credential: string) => {
 

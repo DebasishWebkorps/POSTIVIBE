@@ -63,6 +63,10 @@ function App(): JSX.Element {
       navigate('/login')
     }
 
+    return (() => {
+      socket.off('post Reaction')
+    })
+
   }, [userCredential])
 
 

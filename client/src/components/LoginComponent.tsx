@@ -1,6 +1,7 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { postLoginSuccessHandler } from "../services/apiServices";
+import { motion } from 'framer-motion'
 
 function LoginComponent() {
 
@@ -25,17 +26,28 @@ function LoginComponent() {
     }
 
     return (
-        <div className="w-full h-[100vh] bg-gradient-to-r from-amber-200 to-yellow-500 overflow-hidden flex justify-center items-center">
+        // <div className="w-full h-[100vh] bg-gradient-to-r from-amber-200 to-yellow-500 overflow-hidden flex justify-center items-center">
+        <div className="w-full h-[100vh] bg-black flex justify-center items-center">
 
-
-            <div className="w-52 h-1/2 bg-transparent bg-gray-50 bg-opacity-65 border-2 shadow-md flex flex-col justify-between p-2">
-                <h2>Login</h2>
-                <GoogleLogin
-                    onSuccess={successHandler}
-                    onError={errorHandler}
-                />
+            <div className="w-max h-max overflow-hidden rounded-md bg-transparent shadow-xl flex flex-col justify-between p-10 items-center">
+                <h2 className="text-center text-7xl text-white">Welcome Back</h2>
+                {/* <img className="flex-1 w-full" src="./login.jpg" alt="" /> */}
+                <motion.div
+                    initial={{ translateY: 100 }}
+                    animate={{ translateY: 0 }}
+                    transition={{
+                        duration: 0.5
+                    }}
+                    className="w-max mt-10"
+                >
+                    <GoogleLogin
+                        onSuccess={successHandler}
+                        onError={errorHandler}
+                    />
+                </motion.div>
 
             </div>
+
         </div>
     )
 }
