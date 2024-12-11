@@ -87,13 +87,19 @@ function AddPostForm({ togglePostHandler }) {
 
     return (
         <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 1 }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+            transition={{ duration: 0.3 }}
 
-            className="md:w-1/2 mt-6 overflow-hidden mx-auto p-3 rounded-xl shadow-xl bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-600">
-            <form action="#" className="flex flex-col gap-4">
+            onClick={(event) => {
+                togglePostHandler()
+            }}
+
+            className="w-full fixed left-0 top-0 h-[100vh] z-10 overflow-hidden flex justify-center items-center backdrop-blur-sm">
+            <form action="#"
+            onClick={(event)=> event.stopPropagation()}
+             className="flex flex-col w-1/2 mx-auto gap-4 border p-3 rounded-md backdrop-blur-xl">
                 <input
                     ref={titleRef}
                     onChange={titleChangeHandler}

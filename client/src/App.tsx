@@ -10,6 +10,7 @@ import { setCurrentUser } from "./redux/slice/userSlice";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { addOwnReaction, addPost, reactToPost } from "./redux/slice/postSlice";
 import { verifyUser } from "./services/apiServices";
+import { addFeed } from "./redux/slice/liveFeedSlice";
 
 function App(): JSX.Element {
 
@@ -18,6 +19,7 @@ function App(): JSX.Element {
 
   const navigate = useNavigate()
   const dispatch = useDispatch()
+
 
 
   const getUser = async () => {
@@ -38,6 +40,7 @@ function App(): JSX.Element {
   useEffect(() => {
     socket.on('post Reaction', (data) => {
       dispatch(reactToPost(data))
+      dispatch(addFeed({ feed: `${data.result.email.split('@')[0]} ${data.reaction}d a post` }))
 
       if (data.result.email === currentUser.email) {
         dispatch(addOwnReaction(data))
@@ -54,6 +57,7 @@ function App(): JSX.Element {
 
     socket.on('post added', ({ filteredPost }) => {
       dispatch(addPost(filteredPost))
+      dispatch(addFeed({feed:`New Post Added`}))
     })
 
 
@@ -64,7 +68,7 @@ function App(): JSX.Element {
     }
 
     return (() => {
-      socket.off('post Reaction')
+      socket.off('post added')
     })
 
   }, [userCredential])

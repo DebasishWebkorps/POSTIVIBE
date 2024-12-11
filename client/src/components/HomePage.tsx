@@ -14,6 +14,8 @@ import AddPostForm from "./AddPostForm"
 
 function HomePage() {
     const posts = useSelector((state: RootState) => state.posts.posts)
+    const feeds = useSelector((state: RootState) => state.feeds.feeds)
+
 
     const currentUser = useSelector((state: RootState) => state.user.currentUser)
     const from = useSelector((state: RootState) => state.posts.from)
@@ -69,22 +71,28 @@ function HomePage() {
 
     return (
         // <div className="min-h-[100vh] flex flex-col">
-        <div className="min-h-[100vh] flex flex-col bg-gradient-to-r from-blue-800 to-indigo-900">
+        <div className="min-h-[100vh] flex flex-col bg-bla text-gray-800">
+            {/* <div className="min-h-[100vh] flex flex-col bg-gradient-to-r from-[#d0d9dc] via-[#f9fbfc] to-[#b5c4d2] text-gray-800"> */}
 
-            <div className="w-full bg-gradient-to-r from-violet-500 to-purple-500 text-white flex justify-between py-2 px-1 text-xs sm:text-sm sm:px-10 items-center">
+            {/* Navbar */}
+            <div className="w-full bg-transparent text-white flex justify-between py-2 px-1 text-xs sm:text-sm sm:px-10 shadow-md items-center">
                 <div className="flex gap-2 items-center">
                     <img className="w-4 rounded-full shadow-md" src={`${currentUser?.image}`} alt="" />
-                    <span>Hi, {currentUser.name}</span>
+                    <span className="text-black font-semibold">Hi, {currentUser.name}</span>
                 </div>
                 <div className="flex gap-4">
                     {currentUser.role === 'admin' &&
-                        <button onClick={togglePostHandler} className="cursor-pointer">
+                        <button
+                            onClick={togglePostHandler}
+                            className="px-6 py-2 rounded-md hover:text-white text-black font-semibold shadow-lg transition duration-300 relative overflow-hidden"
+                        >
                             {addPost ? "Cancel Post" : "Add Post"}
                         </button>
                     }
                     <button
                         onClick={logoutHandler}
-                        className="px-6 py-2 rounded-md hover:text-white bg-cyan-400 text-black font-bold  hover:bg-yellow-400 hover:animate-pulse hover:shadow-lg hover:shadow-cyan-500/50 transition duration-300 relative overflow-hidden before:absolute before:inset-0 before:bg-yellow-400 before:translate-x-full hover:before:translate-x-0 before:transition before:duration-300 before:-z-10">
+                        className="px-6 py-2 rounded-md text-black font-semibold shadow-lg hover:scale-105 transform transition duration-300 relative overflow-hidden"
+                    >
                         Logout
                     </button>
                 </div>
@@ -95,36 +103,90 @@ function HomePage() {
                 <AnimatePresence>
                     {addPost && <AddPostForm togglePostHandler={togglePostHandler} />}
                 </AnimatePresence>}
+            <div className="grid grid-cols-[20%,1fr,20%] flex-1">
 
-            <div className="flex-1">
-                <AnimatePresence>
-                    {posts.map((post, idx) => {
-                        // console.log(idx,post.id)
-                        // const isMoved = post.id === posts[from].id || post.id === posts[to].id
+                {/* Left Section */}
+                {/* <div className="bg-black sticky top-0 text-white flex flex-col items-center">
+                    <p className="underline">Most Liked</p>
+                    {posts.map(post => {
                         return (
-                            <motion.div
-                                key={post.id}
-                                // initial={{ scale: 0, translateY: 200 }}
-                                animate={{
-                                    scale: 1,
-                                    translateY: 0,
-                                    ...(moveDirection === 'up' && { translateY: -(distance * 20) }),  // Move up
-                                    ...(moveDirection === 'down' && { translateY: (distance * 20) }), // Move down
-                                    ...(moveDirection === 'same' && { translateY: 0 }), // No movement
-                                }}
-                                // exit={{ scale: 0, translateY: -200 }}
-                                transition={{
-                                    delay: 0.3 * idx,
-                                    duration: 1,
-                                    ease: 'easeOut',
-                                }}
-                            >
-                                <CardElement data={post} />
-                            </motion.div>
+                            <h2>{post.title}</h2>
                         )
                     })}
-                </AnimatePresence>
+                </div> */}
+
+                <div className="bg-gradient-to-r font-sans from-gray-800 via-gray-900 to-black sticky top-0 text-white py-4 px-6 max-h-screen overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                    {feeds?.map((feed, idx) => {
+                        return (
+                            <motion.div
+                                key={idx}
+                                className="bg-gray-800 mb-3 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition-colors duration-300 border-b border-b-red-300"
+                                whileHover={{ scale: 1.1 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0, x: [0, -10, 10, -10, 10, 0] }}
+                                exit={{ opacity: 0, y: 20 }}
+                                transition={{ duration: 0.5, delay: 0.1 * idx }}
+                            >
+                                <h2 className="text-sm font-semibold truncate">{feed.feed}</h2>
+                            </motion.div>
+                        );
+                    })}
+                </div>
+
+
+
+
+
+
+
+                {/* Middle Section */}
+                <div className="flex-1 mt-2 grid gap-1 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 px-4 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                    <AnimatePresence>
+                        {posts.map((post, idx) => {
+                            return (
+                                <motion.div
+                                    key={post.id}
+                                    initial={{ scale: 0, translateY: 300 }}
+                                    animate={{
+                                        scale: 1,
+                                        translateY: 0,
+                                    }}
+                                    transition={{
+                                        delay: 0.3 * idx,
+                                        duration: 1,
+                                        ease: 'easeOut',
+                                    }}
+                                >
+                                    <CardElement data={post} />
+                                </motion.div>
+                            )
+                        })}
+                    </AnimatePresence>
+                </div>
+
+                {/* Right Section */}
+
+                <div className="bg-gradient-to-r font-sans from-gray-800 via-gray-900 to-black sticky top-0 text-white py-4 px-6 max-h-screen overflow-y-auto [&::-webkit-scrollbar]:hidden">
+
+                    {posts?.map((post, idx) => {
+                        return (
+                            <motion.div
+                                key={idx}
+                                className="bg-gray-800 mb-3 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition-colors duration-300 border-b border-b-red-300"
+                                whileHover={{ scale: 1.1 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0, x: [0, -10, 10, -10, 10, 0] }}
+                                exit={{ opacity: 0, y: 20 }}
+                                transition={{ duration: 0.5, delay: 0.1 * idx }}
+                            >
+                                <h2 className="text-sm font-semibold truncate">{post.title}</h2>
+                            </motion.div>
+                        );
+                    })}
+                </div>
+
             </div>
+
         </div>
     )
 }

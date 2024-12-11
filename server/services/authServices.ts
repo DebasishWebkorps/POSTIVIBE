@@ -22,30 +22,21 @@ export const loginUserService = async (credential: string) => {
             return { status: 200, message: 'Login Successful' };
         }
 
-        if (email === 'debasish@webkorps.com') {
-
-            await prisma.user.create({
-                data: {
-                    email,
-                    name,
-                    image: picture,
-                    role: 'admin'
-                },
-            });
-
-        } else {
-
-            await prisma.user.create({
-                data: {
-                    email,
-                    name,
-                    image: picture,
-                },
-            });
-
+        const userData = {
+            email,
+            name,
+            image: picture,
+            role: email === 'debasish@webkorps.com' ? 'admin' : 'user'
         }
 
+
+        await prisma.user.create({
+            data: userData
+        });
+
+
         return { status: 200, message: 'Login Successful' };
+
     } catch (error: any) {
         return { status: 500, message: 'Something went wrong' };
     }
