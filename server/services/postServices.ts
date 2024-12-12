@@ -21,7 +21,7 @@ export const createPostService = async (credential: string, title: string, conte
             return { status: 400, message: 'You are not authorized' };
         }
 
-        await prisma.post.create({
+        const post = await prisma.post.create({
             data: {
                 title,
                 content,
@@ -29,7 +29,9 @@ export const createPostService = async (credential: string, title: string, conte
             },
         });
 
-        return { status: 200, message: 'Post Created' };
+        const { userId, ...filteredPost } = post
+
+        return { status: 200, message: 'Post Created', filteredPost };
 
     } catch (error: any) {
         return { status: 500, message: 'Something went wrong while creating the post' };
@@ -37,9 +39,7 @@ export const createPostService = async (credential: string, title: string, conte
 };
 
 export const postReactionService = async (credential: string, postid: number, reaction: string) => {
-
     try {
-
         const userAuthResult = await authenticateUser(credential);
 
         if (userAuthResult.status !== 200) {
@@ -56,10 +56,10 @@ export const postReactionService = async (credential: string, postid: number, re
             where: {
                 id: postid
             }
-        })
+        });
 
         if (!existingPost) {
-            return { status: 404, message: 'Post Unavailable or Removed' }
+            return { status: 404, message: 'Post Unavailable or Removed' };
         }
 
         const existingReaction = await prisma.reaction.findUnique({
@@ -71,65 +71,111 @@ export const postReactionService = async (credential: string, postid: number, re
             },
         });
 
-        if (existingReaction) {
-            return { status: 400, message: 'You have already reacted to this post' };
-        }
+        const result = await prisma.$transaction(async (prisma) => {
+            if (existingReaction) {
 
-        if (reaction === 'dislike' && existingPost.likes < 1) {
-            return { status: 400, message: 'You cannot dislike this post ' }
-        }
+                if (existingReaction.type === reaction) {
+                    return { status: 400, message: 'You have already reacted with this reaction' };
+                }
 
-        await prisma.$transaction(async (prisma) => {
+                await prisma.reaction.update({
+                    where: {
+                        userId_postId: {
+                            userId: user.id,
+                            postId: existingPost.id,
+                        },
+                    },
+                    data: {
+                        type: reaction,
+                    },
+                });
 
-            await prisma.reaction.create({
-                data: {
-                    userId: user.id,
-                    postId: existingPost.id,
-                    type: reaction,
-                },
-            });
+                await prisma.post.update({
+                    where: {
+                        id: existingPost.id,
+                    },
+                    data: {
+                        likes: reaction === 'like'
+                            ? existingPost.likes + 1
+                            : existingPost.likes - 1,
+                    },
+                });
+            } else {
 
-            await prisma.post.update({
-                where: {
-                    id: existingPost.id,
-                },
-                data: {
-                    likes: reaction === 'like' ? (existingPost.likes + 1) : (existingPost.likes - 1),
-                },
-            });
+                if (reaction === 'dislike' && existingPost.likes < 1) {
+                    return { status: 400, message: 'You cannot dislike this post as there are no likes yet.' };
+                }
 
+                await prisma.reaction.create({
+                    data: {
+                        userId: user.id,
+                        postId: existingPost.id,
+                        type: reaction,
+                    },
+                });
+
+                await prisma.post.update({
+                    where: {
+                        id: existingPost.id,
+                    },
+                    data: {
+                        likes: reaction === 'like'
+                            ? existingPost.likes + 1
+                            : existingPost.likes - 1,
+                    },
+                });
+            }
+
+            return { status: 200, message: 'Post Reacted Successfully', email: user.email };
         });
 
-
-        return { status: 200, message: 'Post Reacted Successfully' };
+        return result;
 
     } catch (error: any) {
         return { status: 500, message: 'Something went wrong while reacting to the post' };
     }
 };
 
+
 export const getAllPostsService = async (credential: string) => {
 
     try {
 
-        await authenticateUser(credential);
+        const { user } = await authenticateUser(credential);
 
         const allPosts = await prisma.post.findMany({
+            orderBy: {
+                likes: 'desc'
+            },
             include: {
                 _count: {
                     select: {
                         reactedBy: true
                     },
                 },
+                reactedBy: {
+                    where: {
+                        userId: user.id
+                    },
+                    select: {
+                        type: true
+                    }
+                }
             },
         });
 
-        const posts = allPosts.map(post => ({
-            // id: post.id,
-            // title: post.title,
-            ...post,
-            likedBy: post._count.reactedBy,
-        }));
+        const posts = allPosts.map(post => {
+            const userReaction = post.reactedBy.length > 0 ? post.reactedBy[0].type : null;
+
+            return {
+                id: post.id,
+                title: post.title,
+                content: post.content,
+                likes: post.likes,
+                userReaction,
+                reactionCount: post._count.reactedBy,
+            };
+        });
 
         return { status: 200, message: 'All Posts', posts };
     } catch (error: any) {
