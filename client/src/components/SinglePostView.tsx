@@ -2,6 +2,8 @@ import { memo, useState } from "react";
 import { BiLike, BiDislike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { postReaction } from "../services/apiServices";
 import { motion } from "framer-motion";
+import { IoIosCloseCircleOutline } from "react-icons/io";
+
 
 function SinglePostView(props) {
     const { data, closeModal } = props;
@@ -25,8 +27,8 @@ function SinglePostView(props) {
 
     return (
         <motion.div
-            className="fixed inset-0 backdrop-blur-sm  flex justify-center items-center z-50"
-            onClick={closeModal}
+            className="fixed inset-0 backdrop-blur-sm flex justify-center items-center z-50"
+            onClick={() => closeModal()}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -36,50 +38,63 @@ function SinglePostView(props) {
                 className="bg-white rounded-md shadow-lg max-w-lg w-full p-4 relative"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
             >
-                <button
-                    className="absolute top-2 right-2 text-gray-600"
-                    onClick={closeModal}
-                >
-                    X
-                </button>
+                <div className="flex relative items-center">
+                    <button
+                        className="absolute right-0 text-gray-600"
+                        onClick={closeModal}
+                    >
+                        <IoIosCloseCircleOutline />
+                    </button>
 
-                {/* Title */}
-                <p className="underline text-center text-xl font-semibold mb-4">{data.title}</p>
-
-                {/* Image */}
-                <img className="w-full h-64 object-contain mb-4" src="login.jpg" alt={data.title} />
-
-                {/* Reactions Section */}
-                <div className="flex items-center justify-center gap-3 mb-4">
-                    {data.userReaction === "like" ? (
-                        <BiSolidLike color="green" size={24} />
-                    ) : (
-                        <button
-                            onClick={() => reactionHandler(data.id, "like")}
-                            disabled={isReacting}
-                            className="hover:scale-110 transition-transform duration-200"
-                        >
-                            <BiLike size={24} />
-                        </button>
-                    )}
-
-                    <span className="font-semibold">{data.likes}</span>
-
-                    {data.userReaction === "dislike" ? (
-                        <BiSolidDislike color="red" size={24} />
-                    ) : (
-                        <button
-                            onClick={() => reactionHandler(data.id, "dislike")}
-                            disabled={isReacting}
-                            className="hover:scale-110 transition-transform duration-200"
-                        >
-                            <BiDislike size={24} />
-                        </button>
-                    )}
+                    <div className="flex items-center gap-1">
+                        <img className="rounded-full overflow-hidden" src="" width={16} height={16} alt="" />
+                        Debasish Kisan
+                    </div>
                 </div>
 
-                {/* Post Content */}
-                <p className="text-xs font-sans px-2">{data.content}</p>
+
+                <img className="w-full h-64 object-contain mb-4" src="login.jpg" alt={data.title} />
+
+                <div className="flex items-center justify-center gap-3 mb-4">
+
+
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-max text-nowrap flex items-center gap-1 text-xs">
+
+                        {data.userReaction === 'like' && <button
+                            onClick={() => reactionHandler(data.id, 'dislike')}
+                            disabled={isReacting}
+                            className="hover:scale-110">
+                            <BiSolidLike color="green" />
+                        </button>}
+
+                        {data.userReaction === 'dislike' && <button
+                            onClick={() => reactionHandler(data.id, 'like')}
+                            disabled={isReacting}
+                            className="hover:scale-110">
+                            <BiSolidDislike color="red" />
+                        </button>}
+
+                        {!data.userReaction &&
+                            <button
+                                onClick={() => reactionHandler(data.id, 'like')}
+                                disabled={isReacting}
+                                className="hover:scale-110">
+                                <BiLike />
+                            </button>
+                        }
+
+
+                        <span className="font-semibold text-xs">{data.likes}</span>
+
+
+                    </div>
+                </div>
+
+                <p className="text-xl font-semibold ">{data.title}</p>
+
+                <p className="text-xs font-sans indent-3">{data.content}</p>
             </div>
         </motion.div>
     );

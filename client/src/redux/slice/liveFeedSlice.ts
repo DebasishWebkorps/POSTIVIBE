@@ -17,10 +17,16 @@ const postSlice = createSlice({
     initialState,
     reducers: {
         addFeed(state, action: PayloadAction<Content>) {
-            state.feeds.push(action.payload);
+            if (state.feeds.length >= 10) state.feeds.pop()
+            state.feeds.unshift(action.payload);
+        },
+        clearFeed(state) {
+            return state = {
+                feeds: []
+            }
         }
     },
 });
 
-export const { addFeed } = postSlice.actions;
+export const { addFeed, clearFeed } = postSlice.actions;
 export default postSlice.reducer;

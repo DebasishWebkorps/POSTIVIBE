@@ -17,9 +17,6 @@ export const createPostService = async (credential: string, title: string, conte
             return { status: 400, message: 'Invalid User' };
         }
 
-        if (user.role !== 'admin') {
-            return { status: 400, message: 'You are not authorized' };
-        }
 
         const post = await prisma.post.create({
             data: {
@@ -29,7 +26,8 @@ export const createPostService = async (credential: string, title: string, conte
             },
         });
 
-        const { userId, ...filteredPost } = post
+        const { userId, ...filteredPost } = post;
+        (filteredPost as { id: number; title: string; content: string; likes: number; name: string }).name = user.name;
 
         return { status: 200, message: 'Post Created', filteredPost };
 
@@ -78,30 +76,77 @@ export const postReactionService = async (credential: string, postid: number, re
                     return { status: 400, message: 'You have already reacted with this reaction' };
                 }
 
-                await prisma.reaction.update({
-                    where: {
-                        userId_postId: {
-                            userId: user.id,
-                            postId: existingPost.id,
+                if (existingReaction.type === 'like' && reaction === 'dislike') {
+                  
+                    await prisma.reaction.update({
+                        where: {
+                            userId_postId: {
+                                userId: user.id,
+                                postId: existingPost.id,
+                            },
                         },
-                    },
-                    data: {
-                        type: reaction,
-                    },
-                });
+                        data: {
+                            type: reaction,
+                        },
+                    });
 
-                await prisma.post.update({
-                    where: {
-                        id: existingPost.id,
-                    },
-                    data: {
-                        likes: reaction === 'like'
-                            ? existingPost.likes + 1
-                            : existingPost.likes - 1,
-                    },
-                });
+                    await prisma.post.update({
+                        where: {
+                            id: existingPost.id,
+                        },
+                        data: {
+                            likes: existingPost.likes - 1, 
+                        },
+                    });
+
+                }else if (existingReaction.type === 'dislike' && reaction === 'like') {
+                 
+                    await prisma.reaction.update({
+                        where: {
+                            userId_postId: {
+                                userId: user.id,
+                                postId: existingPost.id,
+                            },
+                        },
+                        data: {
+                            type: reaction,
+                        },
+                    });
+
+                    await prisma.post.update({
+                        where: {
+                            id: existingPost.id,
+                        },
+                        data: {
+                            likes: existingPost.likes + 1, 
+                        },
+                    });
+
+                } else if (reaction === 'like') {
+               
+                    await prisma.reaction.update({
+                        where: {
+                            userId_postId: {
+                                userId: user.id,
+                                postId: existingPost.id,
+                            },
+                        },
+                        data: {
+                            type: reaction,
+                        },
+                    });
+
+                    await prisma.post.update({
+                        where: {
+                            id: existingPost.id,
+                        },
+                        data: {
+                            likes: existingPost.likes + 1,
+                        },
+                    });
+                }
+
             } else {
-
                 if (reaction === 'dislike' && existingPost.likes < 1) {
                     return { status: 400, message: 'You cannot dislike this post as there are no likes yet.' };
                 }
@@ -114,19 +159,19 @@ export const postReactionService = async (credential: string, postid: number, re
                     },
                 });
 
-                await prisma.post.update({
-                    where: {
-                        id: existingPost.id,
-                    },
-                    data: {
-                        likes: reaction === 'like'
-                            ? existingPost.likes + 1
-                            : existingPost.likes - 1,
-                    },
-                });
+                if (reaction === 'like') {
+                    await prisma.post.update({
+                        where: {
+                            id: existingPost.id,
+                        },
+                        data: {
+                            likes: existingPost.likes + 1,
+                        },
+                    });
+                }
             }
 
-            return { status: 200, message: 'Post Reacted Successfully', email: user.email };
+            return { status: 200, message: 'Post Reacted Successfully', name: user.name };
         });
 
         return result;

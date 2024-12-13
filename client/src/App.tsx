@@ -1,7 +1,7 @@
 import { Route, Routes, useNavigate } from "react-router-dom";
 import HomePage from "./components/HomePage";
 import LoginComponent from "./components/LoginComponent";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { socket } from "./socket";
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store/store";
@@ -15,7 +15,7 @@ import { addFeed } from "./redux/slice/liveFeedSlice";
 function App(): JSX.Element {
 
   const currentUser = useSelector((state: RootState) => state.user.currentUser)
-  const userCredential = localStorage.getItem('postivibecred') || null
+  const userCredential = localStorage.getItem('postivibecred')
 
   const navigate = useNavigate()
   const dispatch = useDispatch()
@@ -29,7 +29,7 @@ function App(): JSX.Element {
       const response = await verifyUser();
 
       dispatch(setCurrentUser(response.data.user))
-
+      navigate('/')
     } catch (error) {
       console.error(error.message)
       navigate('/login')
@@ -38,11 +38,23 @@ function App(): JSX.Element {
   }
 
   useEffect(() => {
-    socket.on('post Reaction', (data) => {
-      dispatch(reactToPost(data))
-      dispatch(addFeed({ feed: `${data.result.email.split('@')[0]} ${data.reaction}d a post` }))
+    if (userCredential) {
+      getUser()
+    } else {
+      navigate('/login')
+    }
+  }, [userCredential])
 
-      if (data.result.email === currentUser.email) {
+
+  useEffect(() => {
+
+    socket.on('post Reaction', (data) => {
+
+      dispatch(reactToPost(data))
+      const feedMessage = data?.result?.name === currentUser?.name ? `I ${data.reaction}d a post` : `${data?.result?.name.split(' ')[0]} ${data?.reaction}d a post`
+      dispatch(addFeed({ feed: feedMessage }))
+
+      if (data.result.name === currentUser.name) {
         dispatch(addOwnReaction(data))
       }
     })
@@ -57,21 +69,18 @@ function App(): JSX.Element {
 
     socket.on('post added', ({ filteredPost }) => {
       dispatch(addPost(filteredPost))
-      dispatch(addFeed({feed:`New Post Added`}))
+      const feedMessage = filteredPost?.name === currentUser?.name ? 'I have added a Post' : `${filteredPost.name.split(' ')[0]} added a post`
+      dispatch(addFeed({ feed: feedMessage }))
     })
 
 
-    if (userCredential) {
-      getUser()
-    } else {
-      navigate('/login')
-    }
+
 
     return (() => {
       socket.off('post added')
     })
 
-  }, [userCredential])
+  }, [currentUser])
 
 
   return (

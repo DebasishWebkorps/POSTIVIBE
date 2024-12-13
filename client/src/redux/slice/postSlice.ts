@@ -37,22 +37,20 @@ const postSlice = createSlice({
             if (postIndex !== -1) {
                 const updatedPost = { ...state.posts[postIndex] };
 
-                if (reaction === "like") {
-                    updatedPost.likes += 1;
-                } else if (reaction === "dislike") {
+            
+                if (updatedPost.userReaction === 'like' && reaction === "dislike") {
                     updatedPost.likes -= 1;
+                } else if (updatedPost.userReaction === 'dislike' && reaction === "like") {
+                    updatedPost.likes += 1;
+                } else if (reaction === 'like') {
+                    updatedPost.likes += 1;
+                } else if (updatedPost.likes >= 1 && reaction === 'dislike') {
+                    updatedPost.likes -= 1
                 }
 
                 state.posts[postIndex] = updatedPost;
             }
 
-
-            state.posts = [...state.posts].sort((a, b) => b.likes - a.likes);
-            
-            const updatedIndex = state.posts.findIndex(post => post.id === id)
-
-            state.from = postIndex
-            state.to = updatedIndex
 
         },
         addOwnReaction(state, action: PayloadAction<{ id: number; reaction: string, result: object }>) {
