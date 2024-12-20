@@ -25,10 +25,11 @@ const postSlice = createSlice({
     initialState,
     reducers: {
         addPost(state, action: PayloadAction<Post>) {
-            state.posts.push(action.payload);
+            state.posts.unshift(action.payload);
+            // state.posts.push(action.payload);
         },
         setPosts(state, action: PayloadAction<Post[]>) {
-            state.posts = action.payload;
+            state.posts = [...state.posts, ...action.payload];  
         },
         reactToPost(state, action: PayloadAction<{ id: number; reaction: string; result: object }>) {
             const { id, reaction } = action.payload;
@@ -37,7 +38,7 @@ const postSlice = createSlice({
             if (postIndex !== -1) {
                 const updatedPost = { ...state.posts[postIndex] };
 
-            
+
                 if (updatedPost.userReaction === 'like' && reaction === "dislike") {
                     updatedPost.likes -= 1;
                 } else if (updatedPost.userReaction === 'dislike' && reaction === "like") {

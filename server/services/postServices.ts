@@ -1,7 +1,8 @@
+import { io } from '../app';
 import prisma from '../models/prismaClient';
 import { authenticateUser } from './authenticateUser';
 
-export const createPostService = async (credential: string, title: string, content: string) => {
+export const createPostService = async (credential: string, title: string, content: string, image: string) => {
 
     try {
 
@@ -22,12 +23,14 @@ export const createPostService = async (credential: string, title: string, conte
             data: {
                 title,
                 content,
+                image,
                 userId: user.id
             },
         });
 
         const { userId, ...filteredPost } = post;
-        (filteredPost as { id: number; title: string; content: string; likes: number; name: string }).name = user.name;
+        (filteredPost as { id: number; title: string; content: string; image: string; likes: number; userName: string }).userName = user.name;
+        (filteredPost as { id: number; title: string; content: string; image: string; likes: number; userName: string, userImage: string }).userImage = user.image;
 
         return { status: 200, message: 'Post Created', filteredPost };
 
@@ -69,6 +72,11 @@ export const postReactionService = async (credential: string, postid: number, re
             },
         });
 
+        let reactions = {
+            like: 0,
+            dislike: 0
+        }
+
         const result = await prisma.$transaction(async (prisma) => {
             if (existingReaction) {
 
@@ -77,7 +85,7 @@ export const postReactionService = async (credential: string, postid: number, re
                 }
 
                 if (existingReaction.type === 'like' && reaction === 'dislike') {
-                  
+
                     await prisma.reaction.update({
                         where: {
                             userId_postId: {
@@ -95,35 +103,15 @@ export const postReactionService = async (credential: string, postid: number, re
                             id: existingPost.id,
                         },
                         data: {
-                            likes: existingPost.likes - 1, 
+                            likes: existingPost.likes - 1,
                         },
                     });
 
-                }else if (existingReaction.type === 'dislike' && reaction === 'like') {
-                 
-                    await prisma.reaction.update({
-                        where: {
-                            userId_postId: {
-                                userId: user.id,
-                                postId: existingPost.id,
-                            },
-                        },
-                        data: {
-                            type: reaction,
-                        },
-                    });
+                    reactions.like -= 1
+                    reactions.dislike += 1
 
-                    await prisma.post.update({
-                        where: {
-                            id: existingPost.id,
-                        },
-                        data: {
-                            likes: existingPost.likes + 1, 
-                        },
-                    });
+                } else if (existingReaction.type === 'dislike' && reaction === 'like') {
 
-                } else if (reaction === 'like') {
-               
                     await prisma.reaction.update({
                         where: {
                             userId_postId: {
@@ -144,6 +132,35 @@ export const postReactionService = async (credential: string, postid: number, re
                             likes: existingPost.likes + 1,
                         },
                     });
+
+                    reactions.like += 1
+                    reactions.dislike -= 1
+
+                } else if (reaction === 'like') {
+
+                    await prisma.reaction.update({
+                        where: {
+                            userId_postId: {
+                                userId: user.id,
+                                postId: existingPost.id,
+                            },
+                        },
+                        data: {
+                            type: reaction,
+                        },
+                    });
+
+                    await prisma.post.update({
+                        where: {
+                            id: existingPost.id,
+                        },
+                        data: {
+                            likes: existingPost.likes + 1,
+                        },
+                    });
+
+                    reactions.like += 1
+                    reactions.dislike = 0
                 }
 
             } else {
@@ -168,12 +185,18 @@ export const postReactionService = async (credential: string, postid: number, re
                             likes: existingPost.likes + 1,
                         },
                     });
+                    reactions.like += 1
+                } else {
+
+                    reactions.dislike -= 1
                 }
+
             }
 
-            return { status: 200, message: 'Post Reacted Successfully', name: user.name };
+            
+            return { status: 200, message: 'Post Reacted Successfully', name: user.name, reactions };
         });
-
+        
         return result;
 
     } catch (error: any) {
@@ -182,32 +205,47 @@ export const postReactionService = async (credential: string, postid: number, re
 };
 
 
-export const getAllPostsService = async (credential: string) => {
-
+export const getAllPostsService = async (credential: string, page: number, limit: number) => {
     try {
 
-        const { user } = await authenticateUser(credential);
+        const { user, status, message } = await authenticateUser(credential);
+
+        if (status !== 200) {
+            return { status, message };
+        }
+
+        const offset = (page - 1) * limit;
 
         const allPosts = await prisma.post.findMany({
-            orderBy: {
-                likes: 'desc'
-            },
+            skip: offset,
+            take: limit,
+            orderBy: [
+                { likes: 'desc' },
+                { id: 'desc' }
+            ],
             include: {
+                user: {
+                    select: {
+                        name: true,
+                        image: true,
+                    },
+                },
                 _count: {
                     select: {
-                        reactedBy: true
+                        reactedBy: true,
                     },
                 },
                 reactedBy: {
                     where: {
-                        userId: user.id
+                        userId: user.id,
                     },
                     select: {
-                        type: true
-                    }
-                }
+                        type: true,
+                    },
+                },
             },
         });
+
 
         const posts = allPosts.map(post => {
             const userReaction = post.reactedBy.length > 0 ? post.reactedBy[0].type : null;
@@ -217,12 +255,55 @@ export const getAllPostsService = async (credential: string) => {
                 title: post.title,
                 content: post.content,
                 likes: post.likes,
+                image: post.image,
                 userReaction,
                 reactionCount: post._count.reactedBy,
+                userName: post.user.name,
+                userImage: post.user.image,
             };
         });
 
-        return { status: 200, message: 'All Posts', posts };
+        const totalPosts = await prisma.post.count();
+
+        return {
+            status: 200,
+            message: 'All Posts',
+            posts,
+            totalPosts,
+            totalPages: Math.ceil(totalPosts / limit),
+            currentPage: page,
+        };
+    } catch (error: any) {
+        console.error('Error fetching posts:', error);
+        return { status: 500, message: 'Something went wrong while fetching posts' };
+    }
+};
+
+
+export const getMostLikedPostsService = async (credential: string) => {
+
+    try {
+
+        await authenticateUser(credential);
+
+        const mostLikedPosts = await prisma.post.findMany({
+            orderBy: {
+                likes: 'desc'
+            },
+            where: {
+                likes: {
+                    gte: 1
+                }
+            },
+            take: 5,
+            select: {
+                id: true,
+                title: true,
+                image: true,
+            }
+        });
+
+        return { status: 200, message: 'Most Liked Posts', mostLikedPosts };
     } catch (error: any) {
         return { status: 500, message: 'Something went wrong while fetching posts' };
     }

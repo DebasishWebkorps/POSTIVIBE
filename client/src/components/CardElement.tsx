@@ -1,8 +1,8 @@
 import { memo, useState } from "react"
-import { BiLike, BiDislike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
+import { BiLike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { postReaction } from "../services/apiServices";
-import { motion } from 'framer-motion'
 import SinglePostView from "./SinglePostView";
+import { toast } from "react-toastify";
 
 function CardElement(props) {
     const { data } = props
@@ -23,30 +23,30 @@ function CardElement(props) {
         try {
             setIsReacting(true)
             await postReaction(data)
-            // props.postReactionHandler(id)
         } catch (error) {
-            console.error(error.message)
+            toast.error(error.message)
         } finally {
             setIsReacting(false)
         }
 
 
     }
-    // return null
+
+
     return (
         <div
             onClick={openModal}
-            className="rounded-md shadow-md p-2 border border-[#b5bec4] overflow-hidden grid grid-rows-[auto,1fr,auto] hover:bg-white hover:shadow-lg bg-transparent transition-colors duration-300">
+            className="rounded-md h-[400px] shadow-md p-2 border border-[#b5bec4] overflow-hidden grid grid-rows-[auto,1fr,60px] hover:shadow-lg bg-transparent transition-colors duration-300">
 
-            
+
             <div className="flex items-center gap-1">
-                <img className="rounded-full overflow-hidden" src="" width={16} height={16} alt="" />
-                Debasish Kisan
+                <img className="rounded-full overflow-hidden" src={data.userImage} width={16} height={16} alt="" />
+                <h2>{data.userName}</h2>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col justify-between">
 
-                <img className="w-full h-full object-contain" src="login.jpg" alt="" />
+                <img loading="lazy" className="w-full h-full object-contain" src={data.image} alt="" />
 
                 <div
                     onClick={(e) => e.stopPropagation()}
@@ -56,7 +56,7 @@ function CardElement(props) {
                         onClick={() => reactionHandler(data.id, 'dislike')}
                         disabled={isReacting}
                         className="hover:scale-110">
-                        <BiSolidLike color="green"  />
+                        <BiSolidLike color="green" />
                     </button>}
 
                     {data.userReaction === 'dislike' && <button
@@ -71,23 +71,24 @@ function CardElement(props) {
                             onClick={() => reactionHandler(data.id, 'like')}
                             disabled={isReacting}
                             className="hover:scale-110">
-                            <BiLike/>
+                            <BiLike />
                         </button>
                     }
 
 
                     <span className="font-semibold text-xs">{data.likes}</span>
 
-                  
+
 
                 </div>
             </div>
             <div className="">
                 <p className="text-sm font-bold">{data.title}</p>
-                <p className="text-xs font-sans indent-3 text-wrap truncate">{data.content} lorem lorem lorem lorem</p>
+                <p className="text-xs font-sans text-wrap truncate line-clamp-2 mb-2"> {data.content} </p>
             </div>
             {isModalOpen && <SinglePostView data={data} closeModal={closeModal} />}
         </div >
+
     )
 }
 

@@ -1,16 +1,19 @@
 import { Route, Routes, useNavigate } from "react-router-dom";
 import HomePage from "./components/HomePage";
 import LoginComponent from "./components/LoginComponent";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { socket } from "./socket";
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store/store";
 import { useDispatch } from "react-redux";
-import { setCurrentUser } from "./redux/slice/userSlice";
+import { setCurrentUser, setTotalLikesDislikes } from "./redux/slice/userSlice";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { addOwnReaction, addPost, reactToPost } from "./redux/slice/postSlice";
 import { verifyUser } from "./services/apiServices";
 import { addFeed } from "./redux/slice/liveFeedSlice";
+import { setRefreshToggle } from "./redux/slice/functionalitySlice";
+import { Bounce, ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 function App(): JSX.Element {
 
@@ -53,8 +56,10 @@ function App(): JSX.Element {
       dispatch(reactToPost(data))
       const feedMessage = data?.result?.name === currentUser?.name ? `I ${data.reaction}d a post` : `${data?.result?.name.split(' ')[0]} ${data?.reaction}d a post`
       dispatch(addFeed({ feed: feedMessage }))
+      dispatch(setRefreshToggle())
 
       if (data.result.name === currentUser.name) {
+        dispatch(setTotalLikesDislikes(data.result.reactions))
         dispatch(addOwnReaction(data))
       }
     })
@@ -69,11 +74,9 @@ function App(): JSX.Element {
 
     socket.on('post added', ({ filteredPost }) => {
       dispatch(addPost(filteredPost))
-      const feedMessage = filteredPost?.name === currentUser?.name ? 'I have added a Post' : `${filteredPost.name.split(' ')[0]} added a post`
+      const feedMessage = filteredPost?.userName === currentUser?.name ? 'I have added a Post' : `${filteredPost.userName.split(' ')[0]} added a post`
       dispatch(addFeed({ feed: feedMessage }))
     })
-
-
 
 
     return (() => {
@@ -85,13 +88,31 @@ function App(): JSX.Element {
 
   return (
 
-    <Routes>
-      <Route path="/login" element={<LoginComponent />} />
+    <div>
 
-      <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<HomePage />} />
-      </Route>
-    </Routes>
+      <Routes>
+        <Route path="/login" element={<LoginComponent />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<HomePage />} />
+        </Route>
+      </Routes>
+
+      <ToastContainer
+        position="bottom-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        transition={Bounce}
+      />
+
+    </div>
 
   );
 }

@@ -3,6 +3,7 @@ import { BiLike, BiDislike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { postReaction } from "../services/apiServices";
 import { motion } from "framer-motion";
 import { IoIosCloseCircleOutline } from "react-icons/io";
+import { toast } from "react-toastify";
 
 
 function SinglePostView(props) {
@@ -19,7 +20,7 @@ function SinglePostView(props) {
             setIsReacting(true);
             await postReaction(postData);
         } catch (error) {
-            console.error(error.message);
+            toast.error(error.message);
         } finally {
             setIsReacting(false);
         }
@@ -36,7 +37,7 @@ function SinglePostView(props) {
         >
             <div
                 className="bg-white rounded-md shadow-lg max-w-lg w-full p-4 relative"
-                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+                onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex relative items-center">
                     <button
@@ -47,13 +48,13 @@ function SinglePostView(props) {
                     </button>
 
                     <div className="flex items-center gap-1">
-                        <img className="rounded-full overflow-hidden" src="" width={16} height={16} alt="" />
-                        Debasish Kisan
+                        <img className="rounded-full overflow-hidden" src={data.userImage} width={16} height={16} alt="" />
+                        <h2>{data.userName}</h2>
                     </div>
                 </div>
 
 
-                <img className="w-full h-64 object-contain mb-4" src="login.jpg" alt={data.title} />
+                <img className="w-full h-64 object-contain mb-4" src={data.image} alt={data.title} />
 
                 <div className="flex items-center justify-center gap-3 mb-4">
 
@@ -94,7 +95,7 @@ function SinglePostView(props) {
 
                 <p className="text-xl font-semibold ">{data.title}</p>
 
-                <p className="text-xs font-sans indent-3">{data.content}</p>
+                <p className="text-xs font-sans">{data.content}</p>
             </div>
         </motion.div>
     );

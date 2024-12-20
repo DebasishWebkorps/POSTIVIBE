@@ -14,7 +14,11 @@ export const verifyUser = async () => {
 
 export const addPost = async (post) => {
     try {
-        const response = await axiosInstance.post('/posts/add', post);
+        const response = await axiosInstance.post('/posts/add', post, {
+            headers: {
+                'Content-Type': 'multipart/form-data', 
+            }
+        });
         return response;
     } catch (error) {
         console.error('Error adding post:', error.message);
@@ -22,13 +26,18 @@ export const addPost = async (post) => {
     }
 };
 
-
-export const getPost = async () => {
+export const getPost = async (page) => {
     try {
-        const response = await axiosInstance.get('/posts');
+        const postsPerPage = 3; 
+        const response = await axiosInstance.get('/posts', {
+            params: {
+                page,         
+                limit: postsPerPage, 
+            }
+        });
         return response;
     } catch (error) {
-        console.error('Error adding post:', error.message);
+        console.error('Error fetching posts:', error.message);
         throw error;
     }
 };
@@ -46,10 +55,21 @@ export const postReaction = async (data) => {
 
 export const postLoginSuccessHandler = async (credential) => {
     try {
-        const response = await axiosInstance.post('/auth/login', {credential});
+        const response = await axiosInstance.post('/auth/login', { credential });
         return response;
     } catch (error) {
         console.error('Error adding post:', error.message);
         throw error;
     }
 }
+
+
+export const getMostLikedPosts = async () => {
+    try {
+        const response = await axiosInstance.get('/posts/mostlikedposts');
+        return response;
+    } catch (error) {
+        console.error('Error getting Most Liked posts:', error.message);
+        throw error;
+    }
+};
