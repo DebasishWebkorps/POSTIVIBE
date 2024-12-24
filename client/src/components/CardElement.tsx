@@ -3,6 +3,8 @@ import { BiLike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { postReaction } from "../services/apiServices";
 import SinglePostView from "./SinglePostView";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store/store";
 
 function CardElement(props) {
     const { data } = props
@@ -12,6 +14,7 @@ function CardElement(props) {
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
+    const theme = useSelector((state: RootState) => state.functionality.functionality.theme)
 
     const reactionHandler = async (id, reaction) => {
 
@@ -36,7 +39,7 @@ function CardElement(props) {
     return (
         <div
             onClick={openModal}
-            className="rounded-md h-[400px] shadow-md p-2 border border-[#b5bec4] overflow-hidden grid grid-rows-[auto,1fr,60px] hover:shadow-lg bg-transparent transition-colors duration-300">
+            className={`${theme === 'day' ? "bg-white text-black border-[#b5bec4]" : "bg-black text-white border-gray-600"} rounded-md h-[400px] shadow-md p-2 border  overflow-hidden grid grid-rows-[auto,1fr,60px] hover:shadow-lg bg-transparent transition-colors duration-300`}>
 
 
             <div className="flex items-center gap-1">
@@ -46,7 +49,7 @@ function CardElement(props) {
 
             <div className="flex flex-col justify-between">
 
-                <img loading="lazy" className="w-full h-full object-contain" src={data.image} alt="" />
+                <img loading="lazy" className={`w-full h-full object-contain border shadow-md my-1 cursor-pointer ${theme === 'day' ? "" : "border-gray-600 shadow-gray-500"}`} src={data.image} alt={`${data.title} image`} />
 
                 <div
                     onClick={(e) => e.stopPropagation()}

@@ -7,7 +7,8 @@ interface Functionality {
     isLast: number,
     addPost: boolean,
     mostLikedPost: object[],
-    refresh: boolean
+    refresh: boolean,
+    theme: string
 }
 
 interface FunctionalityState {
@@ -22,7 +23,8 @@ const initialState: FunctionalityState = {
         isLast: null,
         addPost: false,
         mostLikedPost: null,
-        refresh: false
+        refresh: false,
+        theme: 'day'
     }
 };
 
@@ -56,10 +58,16 @@ const functionalitySlice = createSlice({
         },
         setRefreshToggle: (state) => {
             state.functionality.refresh = !state.functionality.refresh;
+        },
+        setDayTheme: (state) => {
+            state.functionality.theme = 'day'
+        },
+        setNightTheme: (state) => {
+            state.functionality.theme = 'night'
         }
     },
 });
 
-export const { setCurrentPage, setLoadingTrue, setLoadingFalse, setFetchingTrue, setFetchingFalse, setIsLast, setMostLikedPost, setAddPostToggle, setRefreshToggle } = functionalitySlice.actions;
+export const { setCurrentPage, setLoadingTrue, setLoadingFalse, setFetchingTrue, setFetchingFalse, setIsLast, setMostLikedPost, setAddPostToggle, setRefreshToggle, setDayTheme, setNightTheme } = functionalitySlice.actions;
 
 export default functionalitySlice.reducer;

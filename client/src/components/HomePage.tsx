@@ -34,6 +34,7 @@ function HomePage() {
     const addPost = useSelector((state: RootState) => state.functionality.functionality.addPost)
     const mostLikedPost = useSelector((state: RootState) => state.functionality.functionality.mostLikedPost)
     const refresh = useSelector((state: RootState) => state.functionality.functionality.refresh)
+    const theme = useSelector((state: RootState) => state.functionality.functionality.theme)
 
     const middleSectionRef = useRef<HTMLDivElement | null>(null);
 
@@ -50,7 +51,7 @@ function HomePage() {
         try {
             dispatch(setLoadingTrue())
             dispatch(setFetchingTrue())
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // await new Promise(resolve => setTimeout(resolve, 1000));
             const response = await getPost(page)
 
             dispatch(setIsLast(response.data.totalPages))
@@ -132,14 +133,14 @@ function HomePage() {
 
     return (
 
-        <div className="h-[100vh] flex flex-col bg-gray-300 text-gray-800">
+        <div className={`h-[100vh] flex flex-col ${theme === 'day' ? "bg-gray-300" : "bg-gray-700"}`}>
 
             {/* Navbar */}
-            <div className="w-full bg-white flex justify-between py-2 px-1 text-xs sm:text-sm sm:px-10 shadow-md z-10 items-center">
+            <div className={`w-full ${theme === 'day' ? "bg-white text-black" : "bg-black text-white shadow-gray-600"} flex justify-between py-2 px-1 text-xs sm:text-sm sm:px-10 shadow-md  z-10 items-center`}>
 
                 <div className="flex gap-2 items-center">
                     <img className="w-4 rounded-full shadow-md" src={`${currentUser?.image}`} alt="" />
-                    <span className="text-black font-semibold">POSTIVIBE</span>
+                    <span className="font-semibold">POSTIVIBE</span>
                 </div>
 
                 <div className="flex gap-6 items-center">
@@ -150,7 +151,7 @@ function HomePage() {
 
                     <button
                         onClick={logoutHandler}
-                        className="px-6 py-2 rounded-md text-black font-semibold shadow-lg hover:scale-105 transform transition duration-300 relative overflow-hidden"
+                        className={`px-6 py-2 rounded-md font-semibold shadow-lg ${theme === 'night' && "shadow-white shadow-sm"} hover:scale-105 active:scale-90 transform transition duration-300 relative overflow-hidden`}
                     >
                         Logout
                     </button>
@@ -166,10 +167,10 @@ function HomePage() {
                 {/* Left Section */}
 
 
-                <div className="flex flex-col h-full gap-2 items-center pt-5 bg-white sticky top-0 border-t overflow-hidden">
+                <div className={`flex flex-col h-full gap-2 items-center pt-5 ${theme === 'day' ? "bg-white text-black" : "bg-black text-white"}  sticky top-0 border-t overflow-hidden`}>
                     <img className="w-1/2 rounded-full shadow-md" src={`${currentUser?.image}`} alt="Profile Image" />
                     <div className="w-max relative">
-                        <span className="text-black font-semibold text-[6px] sm:text-sm md:text-lg flex gap-1 items-center">Hi, {currentUser?.name} <RiSparkling2Line color="gold" /></span>
+                        <span className="font-semibold text-[6px] sm:text-sm md:text-lg flex gap-1 items-center">Hi, {currentUser?.name} <RiSparkling2Line color="gold" /></span>
                         <div className="w-11/12 h-1 opacity-50 absolute left-0 bottom-0 bg-yellow-400 -z-10 -rotate-2 sm:-translate-y-1 rounded-lg"></div>
                     </div>
 
@@ -187,7 +188,7 @@ function HomePage() {
                         <div>
                             <p className="text-sm font-semibold flex items-center justify-between">
                                 <span className="flex items-center gap-1">
-                                    <BiSolidLike color="blue"/><span className="hidden sm:block">Likes</span>
+                                    <BiSolidLike color="blue" /><span className="hidden sm:block">Likes</span>
                                 </span>
                                 <span className="justify-end">{currentUser?.totalLikes}</span></p>
                             <div className="flex w-full h-1 bg-blue-500 rounded-lg"></div>
@@ -218,7 +219,7 @@ function HomePage() {
                 {/* Middle Section */}
                 <div
                     ref={middleSectionRef}
-                    className="flex-1 rounded-t-md bg-white pt-2 pb-4 mt-2 grid gap-2 gap-y-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 px-2 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                    className={`flex-1 rounded-t-md ${theme === 'day' ? "bg-white" : "bg-black"}  pt-2 pb-4 mt-2 grid gap-2 gap-y-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 px-2 overflow-y-auto [&::-webkit-scrollbar]:hidden`}>
                     <AnimatePresence>
                         {posts.map((post, idx) => {
                             return (
@@ -243,7 +244,7 @@ function HomePage() {
                         <motion.div
                             className="w-full text-center py-4"
                             initial={{ opacity: 0, color: "red" }}
-                            animate={{ opacity: 1, color: "black" }}
+                            animate={{ opacity: 1, color: `${theme === 'day' ? 'black' : 'white'}` }}
                             transition={{
                                 repeat: Infinity,
                                 repeatType: "loop",
@@ -251,11 +252,11 @@ function HomePage() {
                             }}
 
                         >
-                            <span>Loading more posts...</span>
+                            <span>{currentPage === 1 ? "Loading posts..." : "Loading more posts..."}</span>
                         </motion.div>
                     )}
 
-                    {(currentPage === isLast) && < div className="flex flex-col justify-end">
+                    {(currentPage === isLast) && < div className={`flex flex-col justify-end ${theme === 'day' ? "bg-white text-red-500" : "bg-black text-red-500"}`}>
                         <span>No More Posts...</span>
                     </div>}
 
@@ -265,9 +266,9 @@ function HomePage() {
 
                 <div className="bg-transparent grid grid-cols-1 grid-rows-2 gap-2 h-full rounded-lg font-sans from-gray-800 via-gray-900 to-black sticky top-0 text-white py-2 overflow-y-auto [&::-webkit-scrollbar]:hidden">
 
-                    <div className="overflow-hidden bg-white p-2 rounded-lg">
+                    <div className={`overflow-hidden ${theme === 'day' ? "bg-white text-black" : "bg-black text-white"}  p-2 rounded-lg`}>
                         <div className="shadow-md mb-2 flex items-center justify-center relative">
-                            <h2 className="text-black text-center flex items-center gap-1 justify-center text-xs sm:text-sm xl:text-lg "> <span className="hidden sm:block">Most Liked Posts</span> <SiMattermost /></h2>
+                            <h2 className="text-center flex items-center gap-1 justify-center text-xs sm:text-sm xl:text-lg "> <span className="hidden sm:block">Most Liked Posts</span> <SiMattermost /></h2>
                             <button
                                 onClick={refreshHandler}
                                 className="absolute right-0 p-1 cursor-pointer hover:bg-gray-200 rounded-full active:scale-90">
@@ -279,17 +280,18 @@ function HomePage() {
 
                                 <motion.div
                                     key={idx}
-                                    className="bg-white flex items-center gap-2 mb-2 p-2 rounded-lg shadow-md hover:bg-gray-100 transition-colors duration-300 border-b border-b-gray-300"
+                                    className={`${theme === 'day' ? "bg-white text-black" : "bg-black text-white"} flex items-center gap-2 mb-2 p-2 rounded-lg shadow-md hover:bg-gray-100 hover:text-black transition-colors duration-300 border-b border-b-gray-300`}
                                     whileHover={{ scale: 1.05 }}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0, x: [0, -10, 10, -10, 10, 0] }}
                                     exit={{ opacity: 0, y: 20 }}
                                     transition={{ duration: 0.5 }}
                                 >
+                                    <div className="w-6 h-6 rounded-full overflow-hidden shadow-md">
+                                        <img className="object-cover" src={post.image} width={32} height={32} alt="User" />
+                                    </div>
 
-                                    <img className="rounded-full overflow-hidden shadow-md" src={post.image} width={32} height={32} alt="User" />
-
-                                    <h2 className="text-gray-800 text-xs sm:text-sm font-semibold truncate">{post.title}</h2>
+                                    <h2 className="text-xs sm:text-sm font-semibold truncate">{post.title}</h2>
                                 </motion.div>
 
 
@@ -298,9 +300,9 @@ function HomePage() {
                         })}
                     </div>
 
-                    <div className="flex-1 overflow-hidden bg-white p-2 rounded-lg">
+                    <div className={`flex-1 overflow-hidden ${theme === 'day' ? "bg-white text-black" : "bg-black text-white"}  p-2 rounded-lg`}>
                         <div className="flex items-center relative justify-center">
-                            <h2 className="text-black text-center flex gap-1 items-center justify-center"><span className="hidden sm:block">Live Feed</span> <MdRssFeed /></h2>
+                            <h2 className="text-center flex gap-1 items-center justify-center"><span className="hidden sm:block">Live Feed</span> <MdRssFeed /></h2>
                             <button
                                 onClick={() => {
                                     dispatch(clearFeed())
@@ -313,16 +315,16 @@ function HomePage() {
                         {feeds?.map((feed, idx) => {
                             return (
                                 <motion.div
-                                    key={idx}
-                                    className="bg-white flex items-center gap-2 mb-2 p-2 rounded-lg shadow-md hover:bg-gray-100 transition-colors duration-300 border-b border-b-gray-300"
+                                    key={feed.id}
+                                    className={`${theme === 'day' ? "bg-white text-black" : "bg-black text-white"} flex items-center gap-2 mb-2 p-2 rounded-lg shadow-md hover:bg-gray-100 hover:text-black transition-colors duration-300 border-b border-b-gray-300`}
 
                                     whileHover={{ scale: 1.1 }}
-                                    initial={{ opacity: 0, y: 20 }}
+                                    initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0, x: [0, -10, 10, -10, 10, 0] }}
                                     exit={{ opacity: 0, y: 20 }}
-                                    transition={{ duration: 0.3 }}
+                                    transition={{ duration: 0.5 }}
                                 >
-                                    <h2 className={`text-black text-xs sm:text-sm font-semibold w-full truncate ${idx === 0 && 'flex justify-between items-center'}`}>{feed.feed} {idx === 0 &&
+                                    <h2 className={`text-xs sm:text-sm font-semibold w-full truncate ${idx === 0 && 'flex justify-between items-center'}`}>{feed.feed} {idx === 0 &&
                                         <motion.span
                                             animate={{ scale: [1.1, 0.1, 1.1] }}
                                             transition={{

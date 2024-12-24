@@ -1,14 +1,17 @@
 import { memo, useState } from "react";
-import { BiLike, BiDislike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
+import { BiLike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { postReaction } from "../services/apiServices";
 import { motion } from "framer-motion";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store/store";
 
 
 function SinglePostView(props) {
     const { data, closeModal } = props;
     const [isReacting, setIsReacting] = useState(false);
+    const theme = useSelector((state: RootState) => state.functionality.functionality.theme)
 
     const reactionHandler = async (id, reaction) => {
         const postData = {
@@ -36,15 +39,15 @@ function SinglePostView(props) {
             transition={{ duration: 0.3 }}
         >
             <div
-                className="bg-white rounded-md shadow-lg max-w-lg w-full p-4 relative"
+                className={`${theme === 'day' ? "bg-white text-black" : "bg-black text-white"} rounded-md shadow-lg max-w-lg w-full p-4 relative`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex relative items-center">
                     <button
-                        className="absolute right-0 text-gray-600"
+                        className="absolute right-0 text-gray-600 hover:scale-105"
                         onClick={closeModal}
                     >
-                        <IoIosCloseCircleOutline />
+                        <IoIosCloseCircleOutline color={`${theme === 'day' ? "black" : "white"}`} />
                     </button>
 
                     <div className="flex items-center gap-1">
@@ -54,7 +57,7 @@ function SinglePostView(props) {
                 </div>
 
 
-                <img className="w-full h-64 object-contain mb-4" src={data.image} alt={data.title} />
+                <img className={`w-full h-64 object-contain mb-4 border shadow-md my-1 ${theme === 'day' ? "" : "border-gray-600 shadow-gray-500"}`} src={data.image} alt={data.title} />
 
                 <div className="flex items-center justify-center gap-3 mb-4">
 

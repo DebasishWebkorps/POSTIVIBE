@@ -28,7 +28,7 @@ export const addPost = async (post) => {
 
 export const getPost = async (page) => {
     try {
-        const postsPerPage = 3; 
+        const postsPerPage = 10; 
         const response = await axiosInstance.get('/posts', {
             params: {
                 page,         
