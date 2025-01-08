@@ -1,8 +1,10 @@
 import { memo, useState } from "react"
-import { BiLike, BiDislike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
+import { BiLike, BiSolidLike, BiSolidDislike } from "react-icons/bi";
 import { postReaction } from "../services/apiServices";
-import { motion } from 'framer-motion'
 import SinglePostView from "./SinglePostView";
+import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store/store";
 
 function CardElement(props) {
     const { data } = props
@@ -12,6 +14,7 @@ function CardElement(props) {
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
+    const theme = useSelector((state: RootState) => state.functionality.functionality.theme)
 
     const reactionHandler = async (id, reaction) => {
 
@@ -23,90 +26,72 @@ function CardElement(props) {
         try {
             setIsReacting(true)
             await postReaction(data)
-            // props.postReactionHandler(id)
         } catch (error) {
-            console.error(error.message)
+            toast.error(error.message)
         } finally {
             setIsReacting(false)
         }
 
 
     }
-    // return null
+
+
     return (
         <div
             onClick={openModal}
-            className="rounded-md shadow-md border border-[#b5bec4] overflow-hidden grid grid-rows-[20px,1fr,40px] gap-2 hover:bg-white bg-transparent transition-colors duration-300">
+            className={`${theme === 'day' ? "bg-white text-black border-[#b5bec4]" : "bg-black text-white border-gray-600"} rounded-md h-[400px] shadow-md p-2 border  overflow-hidden grid grid-rows-[auto,1fr,60px] hover:shadow-lg bg-transparent transition-colors duration-300`}>
 
-            {/* <div className="flex justify-center"> */}
-            <p className="underline text-center">{data.title}</p>
-            {/* </div> */}
 
-            <div className="flex flex-col">
+            <div className="flex items-center gap-1">
+                <img className="rounded-full overflow-hidden" src={data.userImage} width={16} height={16} alt="" />
+                <h2>{data.userName}</h2>
+            </div>
 
-                <img className="w-full h-full object-contain" src="login.jpg" alt="" />
+            <div className="flex flex-col justify-between">
+
+                <img loading="lazy" className={`w-full h-full object-contain border shadow-md my-1 cursor-pointer ${theme === 'day' ? "" : "border-gray-600 shadow-gray-500"}`} src={data.image} alt={`${data.title} image`} />
 
                 <div
                     onClick={(e) => e.stopPropagation()}
-                    className="w-20 text-nowrap flex items-center gap-1 text-xs">
+                    className="w-max text-nowrap flex items-center gap-1 text-xs">
 
-                    {data.userReaction === 'like' && <span>
-                        <BiSolidLike color="green" size={20} />
-                    </span>}
+                    {data.userReaction === 'like' && <button
+                        onClick={() => reactionHandler(data.id, 'dislike')}
+                        disabled={isReacting}
+                        className="hover:scale-110">
+                        <BiSolidLike color="green" />
+                    </button>}
+
+                    {data.userReaction === 'dislike' && <button
+                        onClick={() => reactionHandler(data.id, 'like')}
+                        disabled={isReacting}
+                        className="hover:scale-110">
+                        <BiSolidDislike color="red" />
+                    </button>}
 
                     {!data.userReaction &&
                         <button
                             onClick={() => reactionHandler(data.id, 'like')}
                             disabled={isReacting}
                             className="hover:scale-110">
-                            <BiLike size={20} />
+                            <BiLike />
                         </button>
                     }
 
-                    {(data.userReaction === 'dislike') && <button
-                        onClick={() => reactionHandler(data.id, 'like')}
-                        disabled={isReacting}
-                        className="hover:scale-110">
-                        <BiLike size={20} />
-                    </button>}
 
-                    <span className="font-semibold">{data.likes}</span>
+                    <span className="font-semibold text-xs">{data.likes}</span>
 
-                    {(data.userReaction === 'like' && data.likes >= 1) && <button
-                        onClick={() => reactionHandler(data.id, 'dislike')}
-                        disabled={isReacting}
-                        className="hover:scale-110">
-                        <BiDislike size={20} />
-                    </button>}
 
-                    {(!data.userReaction && data.likes === 0) && <span>
-                        <BiDislike size={20} />
-                    </span>}
-
-                    {(data.userReaction === 'like' && data.likes === 0) && <span>
-                        <BiDislike size={20} />
-                    </span>}
-
-                    {(!data.userReaction && data.likes >= 1) &&
-                        <button
-                            onClick={() => reactionHandler(data.id, 'dislike')}
-                            disabled={isReacting}
-                            className="hover:scale-110">
-                            <BiDislike size={20} />
-                        </button>
-                    }
-
-                    {data.userReaction === 'dislike' && <span>
-                        <BiSolidDislike color="red" size={20} />
-                    </span>}
 
                 </div>
             </div>
-
-
-            <p className="text-xs font-sans px-2">{data.content}</p>
+            <div className="">
+                <p className="text-sm font-bold">{data.title}</p>
+                <p className="text-xs font-sans text-wrap truncate line-clamp-2 mb-2"> {data.content} </p>
+            </div>
             {isModalOpen && <SinglePostView data={data} closeModal={closeModal} />}
         </div >
+
     )
 }
 

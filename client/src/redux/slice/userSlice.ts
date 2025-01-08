@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface User {
-    id: string,
     name: string,
     email: string,
-    role: string,
-    image: string
+    image: string,
+    totalPost: number,
+    totalLikes: number,
+    totalDislikes: number
 }
 
 interface UserState {
@@ -26,9 +27,16 @@ const userSlice = createSlice({
         logout: (state) => {
             state.currentUser = null;
         },
+        setTotalPosts: (state) => {
+            state.currentUser.totalPost += 1;
+        },
+        setTotalLikesDislikes: (state, action: PayloadAction<{ like: number, dislike: number }>) => {
+            state.currentUser.totalLikes = state.currentUser.totalLikes + action.payload.like
+            state.currentUser.totalDislikes = state.currentUser.totalDislikes + action.payload.dislike
+        }
     },
 });
 
-export const { setCurrentUser, logout } = userSlice.actions;
+export const { setCurrentUser, logout, setTotalPosts, setTotalLikesDislikes } = userSlice.actions;
 
 export default userSlice.reducer;
