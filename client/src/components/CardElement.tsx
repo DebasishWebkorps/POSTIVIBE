@@ -49,7 +49,7 @@ function CardElement(props) {
 
             <div className="flex flex-col justify-between">
 
-                <img loading="lazy" className={`w-full h-full object-contain border shadow-md my-1 cursor-pointer ${theme === 'day' ? "" : "border-gray-600 shadow-gray-500"}`} src={data.image} alt={`${data.title} image`} />
+                <img loading="lazy" className={`w-full h-full object-contain border shadow-md my-1 cursor-pointer ${theme === 'day' ? "" : "border-gray-600 shadow-gray-500"}`} src={data.image} alt={`${data.title}`} />
 
                 <div
                     onClick={(e) => e.stopPropagation()}
