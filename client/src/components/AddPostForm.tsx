@@ -62,7 +62,7 @@ function AddPostForm({ togglePostHandler }) {
                 formData.append("content", contentRef.current.value);
                 formData.append("image", fileRef.current.files[0]);
 
-                const response = await addPost(formData)
+                await addPost(formData)
 
 
                 titleRef.current.value = '';

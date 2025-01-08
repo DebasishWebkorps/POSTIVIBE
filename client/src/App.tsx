@@ -1,7 +1,7 @@
 import { Route, Routes, useNavigate } from "react-router-dom";
 import HomePage from "./components/HomePage";
 import LoginComponent from "./components/LoginComponent";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { socket } from "./socket";
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store/store";
@@ -26,7 +26,7 @@ function App(): JSX.Element {
 
 
 
-  const getUser = async () => {
+  const getUser = useCallback(async () => {
 
     try {
 
@@ -39,7 +39,7 @@ function App(): JSX.Element {
       navigate('/login')
     }
 
-  }
+  }, [dispatch, navigate])
 
   useEffect(() => {
     if (userCredential) {
@@ -47,7 +47,7 @@ function App(): JSX.Element {
     } else {
       navigate('/login')
     }
-  }, [userCredential])
+  }, [userCredential, getUser, navigate])
 
 
   useEffect(() => {
@@ -71,7 +71,7 @@ function App(): JSX.Element {
     return (() => {
       socket.off('post Reaction')
     })
-  }, [currentUser])
+  }, [currentUser, dispatch, feedId])
 
 
   useEffect(() => {
@@ -91,7 +91,7 @@ function App(): JSX.Element {
       socket.off('post added')
     })
 
-  }, [currentUser])
+  }, [currentUser, dispatch, feedId])
 
 
   return (

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { RootState } from "../redux/store/store"
@@ -46,7 +46,7 @@ function HomePage() {
 
     const navigate = useNavigate()
 
-    const fetchAllPosts = async (page: number) => {
+    const fetchAllPosts = useCallback(async (page: number) => {
 
         try {
             dispatch(setLoadingTrue())
@@ -63,9 +63,9 @@ function HomePage() {
             dispatch(setFetchingFalse())
         }
 
-    }
+    }, [dispatch])
 
-    const fetchMostLikedPosts = async () => {
+    const fetchMostLikedPosts = useCallback(async () => {
 
         try {
             const response = await getMostLikedPosts()
@@ -75,18 +75,18 @@ function HomePage() {
             toast.error(error.message)
         }
 
-    }
+    }, [dispatch])
 
     useEffect(() => {
         fetchAllPosts(currentPage);
-    }, [currentPage]);
+    }, [currentPage, fetchAllPosts]);
 
     useEffect(() => {
         fetchMostLikedPosts()
-    }, [refresh])
+    }, [refresh, fetchMostLikedPosts])
 
 
-    const handleScroll = () => {
+    const handleScroll = useCallback(() => {
 
         if (!middleSectionRef.current) return;
 
@@ -98,20 +98,22 @@ function HomePage() {
                 dispatch(setCurrentPage())
             }
         }
-    };
+    }, [dispatch, isFetching, isLast, loading, currentPage]);
 
 
     useEffect(() => {
 
-        if (middleSectionRef.current) {
-            middleSectionRef.current.addEventListener("scroll", handleScroll);
+        const currentMiddleSection = middleSectionRef.current;
+
+        if (currentMiddleSection) {
+            currentMiddleSection.addEventListener("scroll", handleScroll);
         }
         return () => {
-            if (middleSectionRef.current) {
-                middleSectionRef.current.removeEventListener("scroll", handleScroll);
+            if (currentMiddleSection) {
+                currentMiddleSection.removeEventListener("scroll", handleScroll);
             }
         };
-    }, [loading, isFetching]);
+    }, [loading, isFetching, handleScroll]);
 
 
 
@@ -168,7 +170,7 @@ function HomePage() {
 
 
                 <div className={`flex flex-col h-full gap-2 items-center pt-5 ${theme === 'day' ? "bg-white text-black" : "bg-black text-white"}  sticky top-0 border-t overflow-hidden`}>
-                    <img className="w-1/2 rounded-full shadow-md" src={`${currentUser?.image}`} alt="Profile Image" />
+                    <img className="w-1/2 rounded-full shadow-md" src={`${currentUser?.image}`} alt="Profile" />
                     <div className="w-max relative">
                         <span className="font-semibold text-[6px] sm:text-sm md:text-lg flex gap-1 items-center">Hi, {currentUser?.name} <RiSparkling2Line color="gold" /></span>
                         <div className="w-11/12 h-1 opacity-50 absolute left-0 bottom-0 bg-yellow-400 -z-10 -rotate-2 sm:-translate-y-1 rounded-lg"></div>
